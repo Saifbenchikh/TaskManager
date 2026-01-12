@@ -1,0 +1,85 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
+body {
+    background-color: #f0f2f5;
+    font-family: 'Poppins', sans-serif;
+    color: #333;
+}
+
+.main-container {
+    max-width: 800px;
+    margin: auto;
+    padding-top: 50px;
+    padding-bottom: 50px;
+}
+
+h1 {
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 30px;
+}
+
+
+.custom-card {
+    border: none;
+    border-radius: 20px;
+    background: white;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    padding: 25px;
+    margin-bottom: 25px;
+}
+
+
+.form-control {
+    background-color: #f8f9fa;
+    border: 2px solid #eee;
+    border-radius: 12px;
+    padding: 12px;
+    transition: all 0.3s;
+}
+
+.form-control:focus {
+    background-color: white;
+    border-color: #764ba2;
+    box-shadow: none;
+}
+
+
+.btn-gradient {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    border-radius: 12px;
+    color: white;
+    font-weight: 600;
+    padding: 12px;
+    transition: transform 0.2s;
+}
+
+.btn-gradient:hover {
+    transform: scale(1.02);
+    color: white;
+}
+
+
+.task-item {
+    background: white;
+    border-bottom: 1px solid #f0f0f0;
+    padding: 15px 0;
+    transition: background 0.2s;
+}
+
+.task-item:last-child {
+    border-bottom: none;
+}
+
+.task-item:hover {
+    background-color: #fafafa;
+}
+
+.badge-custom {
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 0.8em;
+}
