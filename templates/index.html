@@ -7,10 +7,19 @@
 </head>
 <body class="bg-light">
     <div class="container mt-5">
-        <h1 class="text-center mb-4">🚀 Task Manager de l'Équipe</h1>
+        <h1 class="text-center mb-4">Task Manager de l'Équipe</h1>
 
         <div class="card shadow">
             <div class="card-body">
+                <form action="/ajouter" method="POST" class="row g-3 mb-4">
+                    <div class="col-auto">
+                        <input type="text" name="titre" class="form-control" placeholder="Nouvelle tâche..." required>
+                    </div>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-success">Ajouter</button>
+                    </div>
+                </form>
+                
                 <ul class="list-group">
                     {% for tache in taches %}
                         <li class="list-group-item d-flex justify-content-between align-items-center">
