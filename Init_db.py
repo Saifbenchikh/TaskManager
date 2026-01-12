@@ -19,7 +19,7 @@ cur.execute('''
         is_recurring BOOLEAN DEFAULT 0
     )
 ''')
-
+#test
 # 4. (Optionnel) Ajouter une tâche de test pour vérifier que ça marche
 cur.execute("INSERT INTO tasks (titre, statut, urgence) VALUES (?, ?, ?)",
             ('Finir le projet SQL', 'A faire', 'danger'))
