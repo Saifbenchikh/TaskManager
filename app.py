@@ -19,12 +19,22 @@ def accueil():
     
     if filtre == 'date_croissante':
         sql_query += ' ORDER BY date_echeance ASC'
+    elif filtre == 'date_decroissante':
+        sql_query += ' ORDER BY date_echeance DESC'
     elif filtre == 'urgence':
-        sql_query += ' ORDER BY urgence DESC'
+        sql_query += ''' ORDER BY CASE urgence 
+                         WHEN 'danger' THEN 1 
+                         WHEN 'warning' THEN 2 
+                         WHEN 'primary' THEN 3 
+                         ELSE 4 END ASC, date_echeance ASC'''
     elif filtre == 'alphabetique':
         sql_query += ' ORDER BY titre ASC'
     else:
-        sql_query += ' ORDER BY urgence DESC, date_echeance ASC'
+        sql_query += ''' ORDER BY CASE urgence 
+                         WHEN 'danger' THEN 1 
+                         WHEN 'warning' THEN 2 
+                         WHEN 'primary' THEN 3 
+                         ELSE 4 END ASC, date_echeance ASC'''
 
     taches = conn.execute(sql_query).fetchall()
     projets_db = conn.execute('SELECT * FROM projects').fetchall()
@@ -39,12 +49,13 @@ def accueil():
         pourcentage = int((fait / total) * 100) if total > 0 else 0
         liste_projets.append({'infos': p, 'pourcentage': pourcentage, 'taches': taches_projet})
 
-    a_faire = [t for t in taches if t['statut'] == 'A faire']
-    terminees = [t for t in taches if t['statut'] == 'Terminée']
+    # Filtres pour les listes principales
+    a_faire = [t for t in taches if t['statut'] == 'A faire' and t['project_id'] is None]
+    terminees = [t for t in taches if t['statut'] == 'Terminée' and t['project_id'] is None]
+    
     today = date.today().isoformat()
-
-    # --- NOUVEAU : DONNEES POUR LES STATISTIQUES ---
-    # On compte combien de tâches pour chaque niveau d'urgence
+    
+    # Statistiques
     stat_danger = len([t for t in taches if t['urgence'] == 'danger'])
     stat_warning = len([t for t in taches if t['urgence'] == 'warning'])
     stat_primary = len([t for t in taches if t['urgence'] == 'primary'])
@@ -54,23 +65,33 @@ def accueil():
                            terminees=terminees, 
                            projets=liste_projets,
                            today=today,
-                           # On envoie les chiffres au HTML pour les graphiques
                            stats={'danger': stat_danger, 'warning': stat_warning, 'primary': stat_primary})
 
-# --- ROUTES CLASSIQUES (Pas de changement ici) ---
+# --- ROUTES D'ACTION ---
+
 @app.route('/ajouter', methods=['POST'])
 def ajouter_tache():
+    # C'EST ICI QUE L'ERREUR SE PRODUISAIT SOUVENT
+    # On s'assure de bien utiliser les parenthèses ()
     titre = request.form.get('titre')
     date_echeance = request.form.get('date')
     urgence = request.form.get('urgence')
+    
+    # Récupération sécurisée de l'ID projet
     projet_id = request.form.get('projet_id')
-    if not projet_id: projet_id = None
+    
+    # Si projet_id est vide ou une chaine vide, on le met à None
+    if not projet_id or projet_id.strip() == "":
+        projet_id = None
 
     conn = get_db_connection()
     conn.execute('INSERT INTO tasks (titre, statut, urgence, date_echeance, project_id) VALUES (?, ?, ?, ?, ?)',
                  (titre, 'A faire', urgence, date_echeance, projet_id))
     conn.commit()
     conn.close()
+    
+    # On redirige simplement vers l'accueil. 
+    # Le Javascript (script.js) s'occupera de rouvrir le bon onglet.
     return redirect('/')
 
 @app.route('/modifier/<int:id>', methods=['POST'])
@@ -78,6 +99,7 @@ def modifier_tache(id):
     titre = request.form.get('titre')
     date_echeance = request.form.get('date')
     urgence = request.form.get('urgence')
+    
     conn = get_db_connection()
     conn.execute('UPDATE tasks SET titre = ?, date_echeance = ?, urgence = ? WHERE id = ?',
                  (titre, date_echeance, urgence, id))
@@ -100,6 +122,7 @@ def valider_tache(id):
     conn.execute("UPDATE tasks SET statut = 'Terminée' WHERE id = ?", (id,))
     conn.commit()
     conn.close()
+    # Cette astuce permet de rester sur la même page sans recharger tout l'historique
     return redirect('/')
 
 @app.route('/invalider/<int:id>')

@@ -26,7 +26,7 @@ body {
     transition: background-color 0.3s ease;
 }
 
-/* SIDEBAR */
+/* SIDEBAR (Renforcement) */
 .wrapper { display: flex; min-height: 100vh; }
 .sidebar {
     width: var(--sidebar-width);
@@ -35,12 +35,15 @@ body {
     position: fixed;
     height: 100vh;
     padding: 25px;
-    z-index: 1000;
+    z-index: 2000; /* Sidebar très haut au-dessus de tout */
+    left: 0; top: 0;
 }
 .sidebar-header { font-size: 1.3rem; font-weight: 800; color: var(--primary); margin-bottom: 40px; }
 .nav-link {
     display: flex; align-items: center; padding: 12px; color: var(--text-muted);
-    border-radius: 8px; margin-bottom: 5px; text-decoration: none; font-weight: 500; cursor: pointer; transition: 0.2s;
+    border-radius: 8px; margin-bottom: 5px; text-decoration: none; font-weight: 500; 
+    cursor: pointer; /* Force le curseur main */
+    transition: 0.2s;
 }
 .nav-link:hover, .nav-link.active { background-color: rgba(79, 70, 229, 0.08); color: var(--primary); }
 .nav-link i { width: 25px; }
@@ -57,33 +60,21 @@ body {
     box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 
-/* ANIMATIONS PRO */
-/* 1. Slide Up simple (pour le formulaire) */
+/* ANIMATIONS */
 .animate-slide-up {
     animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     opacity: 0; transform: translateY(20px);
 }
-
-/* 2. Stagger (Cascade) pour les listes */
-.animate-stagger .task-item, 
-.animate-stagger .app-card,
-.animate-stagger .col-md-6 {
-    opacity: 0;
-    animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+.animate-stagger .task-item, .animate-stagger .app-card, .animate-stagger .col-md-6 {
+    opacity: 0; animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
-
-/* Décalage pour chaque élément (jusqu'à 10) */
 .animate-stagger > *:nth-child(1) { animation-delay: 0.05s; }
 .animate-stagger > *:nth-child(2) { animation-delay: 0.1s; }
 .animate-stagger > *:nth-child(3) { animation-delay: 0.15s; }
 .animate-stagger > *:nth-child(4) { animation-delay: 0.2s; }
 .animate-stagger > *:nth-child(5) { animation-delay: 0.25s; }
+@keyframes slideUp { to { opacity: 1; transform: translateY(0); } }
 
-@keyframes slideUp {
-    to { opacity: 1; transform: translateY(0); }
-}
-
-/* BOUTON CHECK (Effet tactile) */
 .btn-check-anim:active { transform: scale(0.9); transition: transform 0.1s; }
 
 /* INPUTS */
@@ -99,5 +90,37 @@ body {
     .sidebar { transform: translateX(-100%); transition: 0.3s; }
     .sidebar.active { transform: translateX(0); }
     .main-content { margin-left: 0; padding: 20px; padding-top: 70px; }
-    .burger-btn { display: block; position: fixed; top: 15px; left: 15px; z-index: 2000; background: var(--primary); color: white; border: none; padding: 8px 12px; border-radius: 6px; }
+    .burger-btn { display: block; position: fixed; top: 15px; left: 15px; z-index: 3000; background: var(--primary); color: white; border: none; padding: 8px 12px; border-radius: 6px; }
+}
+
+/* CORRECTIF MENU DROPDOWN */
+.task-item { position: relative; z-index: 1; }
+.task-item:hover { z-index: 50; background-color: var(--bg-card); }
+
+
+/*accordeon*/
+
+.project-header {
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.project-header:hover {
+    background-color: #f9fafb; /* Légèrement plus gris au survol */
+}
+
+/* Animation de la flèche */
+.chevron-icon {
+    transition: transform 0.3s ease;
+}
+
+/* Quand l'élément est ouvert (Bootstrap ajoute l'attribut aria-expanded="true") */
+[aria-expanded="true"] .chevron-icon {
+    transform: rotate(180deg);
+}
+
+.project-checkbox:hover {
+    color: var(--primary) !important;
+    transform: scale(1.1);
+    transition: all 0.2s;
 }

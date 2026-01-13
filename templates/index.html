@@ -10,34 +10,21 @@
 </head>
 <body>
 
-    <button class="burger-btn" onclick="toggleSidebar()">
-        <i class="fas fa-bars"></i>
-    </button>
+    <button class="burger-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
 
     <div class="wrapper">
         
         <nav class="sidebar" id="sidebar">
-            <div class="sidebar-header">
-                <i class="fas fa-layer-group"></i> TaskMaster
-            </div>
-            
+            <div class="sidebar-header"><i class="fas fa-layer-group"></i> TaskMaster</div>
             <div class="d-flex flex-column h-100">
-                <a class="nav-link active" onclick="showTab('afaire')">
-                    <i class="fas fa-list-check"></i> À faire
-                    <span class="badge bg-primary ms-auto">{{ a_faire|length }}</span>
+                <a class="nav-link active" href="#" onclick="showTab(event, 'afaire')">
+                    <i class="fas fa-list-check"></i> À faire <span class="badge bg-primary ms-auto">{{ a_faire|length }}</span>
                 </a>
-                <a class="nav-link" onclick="showTab('projets')">
-                    <i class="fas fa-folder-open"></i> Projets
-                </a>
-                <a class="nav-link" onclick="showTab('stats')">
-                    <i class="fas fa-chart-pie"></i> Statistiques
-                </a>
-                <a class="nav-link" onclick="showTab('terminees')">
-                    <i class="fas fa-history"></i> Historique
-                </a>
-
+                <a class="nav-link" href="#" onclick="showTab(event, 'projets')"><i class="fas fa-folder-open"></i> Projets</a>
+                <a class="nav-link" href="#" onclick="showTab(event, 'stats')"><i class="fas fa-chart-pie"></i> Statistiques</a>
+                <a class="nav-link" href="#" onclick="showTab(event, 'terminees')"><i class="fas fa-history"></i> Historique</a>
                 <div class="mt-4 pt-3 border-top">
-                    <a class="nav-link text-muted" onclick="toggleDarkMode()">
+                    <a class="nav-link text-muted" href="#" onclick="toggleDarkMode(event)">
                         <i class="fas fa-moon" id="dark-icon"></i> <span id="dark-text">Mode Sombre</span>
                     </a>
                 </div>
@@ -47,54 +34,77 @@
         <main class="main-content">
             
             <div class="d-flex justify-content-between align-items-center mb-5 flex-wrap gap-3">
-                <div>
-                    <h2 class="fw-bold m-0">Tableau de bord</h2>
-                    <p class="text-muted m-0">{{ today }}</p>
-                </div>
-                <div class="position-relative" style="width: 300px;">
-                    <input type="text" id="searchInput" class="form-control ps-5" placeholder="Filtrer..." onkeyup="filtrerTaches()">
-                    <i class="fas fa-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
-                </div>
-            </div>
+                <div><h2 class="fw-bold m-0">Tableau de bord</h2><p class="text-muted m-0">{{ today }}</p></div>
+                <div class="d-flex gap-2">
+                    
+                    <div class="dropdown d-none" id="btnSortProjects">
+                        <button class="btn btn-white border dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-filter me-1 text-primary"></i> Trier les projets
+                        </button>
+                        <ul class="dropdown-menu shadow border-0">
+                            <li><h6 class="dropdown-header">Ordre d'affichage des dossiers</h6></li>
+                            <li><a class="dropdown-item" href="/?trie={{ current_sort }}&trie_projets=defaut">🕒 Par défaut (Création)</a></li>
+                            <li><a class="dropdown-item" href="/?trie={{ current_sort }}&trie_projets=nom">🔤 Nom (A-Z)</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="/?trie={{ current_sort }}&trie_projets=progress_desc">📈 Avancement (Le + fini)</a></li>
+                            <li><a class="dropdown-item" href="/?trie={{ current_sort }}&trie_projets=progress_asc">📉 Avancement (Le - fini)</a></li>
+                        </ul>
+                    </div>
 
-            <div class="app-card animate-slide-up">
-                <form action="/ajouter" method="POST" class="row g-2">
-                    <div class="col-md-5">
-                        <input type="text" name="titre" class="form-control" placeholder="Nouvelle tâche..." required>
+                    <div class="position-relative" style="width: 250px;">
+                        <input type="text" id="searchInput" class="form-control ps-5" placeholder="Rechercher..." onkeyup="filtrerTaches()">
+                        <i class="fas fa-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
                     </div>
-                    <div class="col-md-3">
-                        <input type="date" name="date" class="form-control">
-                    </div>
-                    <div class="col-md-2">
-                        <select name="urgence" class="form-select">
-                            <option value="primary">Normal</option>
-                            <option value="warning">Important</option>
-                            <option value="danger">Urgent</option>
-                        </select>
-                    </div>
-                    <div class="col-md-2">
-                        <button type="submit" class="btn btn-primary w-100">Ajouter</button>
-                    </div>
-                    <div class="col-12 mt-2">
-                         <select name="projet_id" class="form-select form-select-sm w-auto d-inline-block">
-                            <option value="">-- Rattacher à un projet (Optionnel) --</option>
-                            {% for p in projets %}
-                                <option value="{{ p.infos.id }}">{{ p.infos.nom }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                </form>
+                </div>
             </div>
 
             <div id="tab-afaire" class="tab-section animate-stagger">
-                <div class="app-card mt-4">
-                    <h5 class="mb-4 fw-bold">Tâches en cours</h5>
+                
+                <div class="app-card mb-4 bg-white border-primary border-opacity-25" style="border-left: 5px solid var(--primary);">
+                    <form action="/ajouter" method="POST" class="row g-2 align-items-center">
+                        <div class="col-md-5">
+                            <label class="small text-muted fw-bold mb-1">Tâche</label>
+                            <input type="text" name="titre" class="form-control" placeholder="Qu'avez-vous à faire ?" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="small text-muted fw-bold mb-1">Date limite</label>
+                            <input type="date" name="date" class="form-control">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="small text-muted fw-bold mb-1">Urgence</label>
+                            <select name="urgence" class="form-select">
+                                <option value="primary">Normal</option>
+                                <option value="warning">Important</option>
+                                <option value="danger">Urgent</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                             <label class="small text-muted fw-bold mb-1">&nbsp;</label>
+                            <button type="submit" class="btn btn-primary w-100"><i class="fas fa-plus me-1"></i> Créer</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="app-card">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h5 class="fw-bold m-0">Tâches isolées</h5>
+                        
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-light border dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-sort-amount-down me-1 text-muted"></i> Trier
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow border-0">
+                                <li><a class="dropdown-item" href="/?trie=urgence&trie_projets={{ current_proj_sort }}">🔥 Par Urgence</a></li>
+                                <li><a class="dropdown-item" href="/?trie=date_croissante&trie_projets={{ current_proj_sort }}">📅 Par Date (Proche -> Loin)</a></li>
+                                <li><a class="dropdown-item" href="/?trie=alphabetique&trie_projets={{ current_proj_sort }}">🔤 Alphabétique (A-Z)</a></li>
+                            </ul>
+                        </div>
+                    </div>
+
                     {% for tache in a_faire %}
                         <div class="task-item d-flex justify-content-between align-items-center p-3 border-bottom search-item">
                             <div class="d-flex align-items-center gap-3">
-                                <a href="/valider/{{ tache.id }}" class="btn btn-outline-success rounded-circle btn-check-anim">
-                                    <i class="fas fa-check"></i>
-                                </a>
+                                <a href="/valider/{{ tache.id }}" class="btn btn-outline-success rounded-circle btn-check-anim"><i class="fas fa-check"></i></a>
                                 <div>
                                     <div class="fw-bold">{{ tache.titre }}</div>
                                     <div class="small text-muted">
@@ -104,87 +114,127 @@
                                 </div>
                             </div>
                             <div class="dropdown">
-                                <button class="btn btn-link text-muted" data-bs-toggle="dropdown"><i class="fas fa-ellipsis-v"></i></button>
+                                <button class="btn btn-link text-muted" type="button" data-bs-toggle="dropdown"><i class="fas fa-ellipsis-v"></i></button>
                                 <ul class="dropdown-menu dropdown-menu-end border-0 shadow">
-                                    <li><button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#modalModif{{ tache.id }}">Modifier</button></li>
-                                    <li><a class="dropdown-item text-danger" href="/supprimer/{{ tache.id }}">Supprimer</a></li>
+                                    <li><button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#modalModif{{ tache.id }}">✏️ Modifier</button></li>
+                                    <li><a class="dropdown-item text-danger" href="/supprimer/{{ tache.id }}">🗑️ Supprimer</a></li>
                                 </ul>
                             </div>
                         </div>
-                        
-                        <div class="modal fade" id="modalModif{{ tache.id }}" tabindex="-1">
-                            <div class="modal-dialog">
-                                <div class="modal-content border-0 shadow">
-                                    <div class="modal-header border-0"><h5 class="modal-title">Modifier</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-                                    <form action="/modifier/{{ tache.id }}" method="POST">
-                                        <div class="modal-body">
-                                            <input type="text" name="titre" class="form-control mb-3" value="{{ tache.titre }}">
-                                            <input type="date" name="date" class="form-control mb-3" value="{{ tache.date_echeance }}">
-                                            <select name="urgence" class="form-select">
-                                                <option value="primary" {% if tache.urgence == 'primary' %}selected{% endif %}>Normal</option>
-                                                <option value="warning" {% if tache.urgence == 'warning' %}selected{% endif %}>Important</option>
-                                                <option value="danger" {% if tache.urgence == 'danger' %}selected{% endif %}>Urgent</option>
-                                            </select>
-                                        </div>
-                                        <div class="modal-footer border-0"><button type="submit" class="btn btn-primary">Sauvegarder</button></div>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
                     {% else %}
-                        <p class="text-center text-muted py-4">Aucune tâche en cours.</p>
+                        <p class="text-center text-muted py-4">Aucune tâche isolée en cours.</p>
                     {% endfor %}
                 </div>
             </div>
 
             <div id="tab-projets" class="tab-section d-none animate-stagger">
-                <form action="/ajouter_projet" method="POST" class="d-flex gap-2 mb-4 mt-4">
-                    <input type="text" name="nom_projet" class="form-control" placeholder="Nouveau projet...">
-                    <button type="submit" class="btn btn-light border"><i class="fas fa-plus"></i></button>
-                </form>
-                <div class="row g-4">
+                
+                <div class="app-card mb-4 p-4" style="background: linear-gradient(145deg, #ffffff, #f0f2f5);">
+                    <form action="/ajouter_projet" method="POST">
+                        <label class="form-label fw-bold text-muted small text-uppercase">Nouveau chantier</label>
+                        <div class="input-group input-group-lg shadow-sm rounded-pill overflow-hidden">
+                            <span class="input-group-text bg-white border-0 ps-4"><i class="fas fa-briefcase text-primary"></i></span>
+                            <input type="text" name="nom_projet" class="form-control border-0" placeholder="Nom du projet..." required>
+                            <button type="submit" class="btn btn-primary px-4 fw-bold">CRÉER</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="row g-3">
                     {% for p in projets %}
-                        <div class="col-md-6 search-item">
-                            <div class="app-card h-100">
-                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <h5 class="fw-bold m-0">{{ p.infos.nom }}</h5>
-                                    <span class="badge bg-light text-dark border">{{ p.pourcentage }}%</span>
+                        <div class="col-12 search-item">
+                            <div class="app-card p-0 overflow-hidden">
+                                <div class="p-3 project-header d-flex justify-content-between align-items-center" 
+                                     data-bs-toggle="collapse" 
+                                     data-bs-target="#collapseProjet{{ p.infos.id }}"
+                                     aria-expanded="false" style="cursor: pointer;">
+                                    <div class="flex-grow-1 me-3">
+                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                            <h6 class="fw-bold m-0 text-primary">{{ p.infos.nom }}</h6>
+                                            <span class="badge bg-light text-dark border small">{{ p.pourcentage }}%</span>
+                                        </div>
+                                        <div class="progress" style="height: 6px;">
+                                            <div class="progress-bar bg-primary" style="width: {{ p.pourcentage }}%"></div>
+                                        </div>
+                                    </div>
+                                    <i class="fas fa-chevron-down text-muted chevron-icon"></i>
                                 </div>
-                                <div class="progress" style="height: 8px;">
-                                    <div class="progress-bar bg-primary" style="width: {{ p.pourcentage }}%"></div>
-                                </div>
-                                <div class="mt-3 small text-muted">
-                                    {{ p.taches|length }} tâches liées
+
+                                <div class="collapse" id="collapseProjet{{ p.infos.id }}">
+                                    <div class="bg-body-secondary px-3 py-2 border-top d-flex justify-content-between align-items-center">
+                                        
+                                        <div class="dropdown">
+                                            <button class="btn btn-sm btn-link text-decoration-none text-muted dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                                <i class="fas fa-sort me-1"></i> Trier les tâches
+                                            </button>
+                                            <ul class="dropdown-menu shadow border-0" style="font-size: 0.9rem;">
+                                                <li><a class="dropdown-item" href="/?trie=urgence&trie_projets={{ current_proj_sort }}">🔥 Par Urgence</a></li>
+                                                <li><a class="dropdown-item" href="/?trie=alphabetique&trie_projets={{ current_proj_sort }}">🔤 Alphabétique</a></li>
+                                            </ul>
+                                        </div>
+
+                                        <div class="form-check form-switch m-0">
+                                            <input class="form-check-input" type="checkbox" role="switch" 
+                                                   id="switchCompleted{{ p.infos.id }}" 
+                                                   onchange="toggleProjectCompleted('{{ p.infos.id }}')" checked>
+                                            <label class="form-check-label small text-muted fw-bold" for="switchCompleted{{ p.infos.id }}">
+                                                Voir finies
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div class="bg-light border-top p-3 pt-0">
+                                        {% if p.taches %}
+                                            <ul class="list-group list-group-flush rounded shadow-sm mb-3 mt-3">
+                                                {% for t in p.taches %}
+                                                    <li class="list-group-item d-flex justify-content-between align-items-center bg-white {% if t.statut == 'Terminée' %}task-done{% endif %}">
+                                                        <div class="d-flex align-items-center gap-2 w-100">
+                                                            {% if t.statut == 'Terminée' %}
+                                                                <a href="/invalider/{{ t.id }}" class="text-decoration-none text-success fs-5">
+                                                                    <i class="fas fa-check-square"></i>
+                                                                </a>
+                                                                <span class="text-decoration-line-through text-muted flex-grow-1 ms-2">{{ t.titre }}</span>
+                                                            {% else %}
+                                                                <a href="/valider/{{ t.id }}" class="text-decoration-none text-muted fs-5 project-checkbox">
+                                                                    <i class="far fa-square"></i>
+                                                                </a>
+                                                                <span class="flex-grow-1 ms-2">{{ t.titre }}</span>
+                                                            {% endif %}
+                                                        </div>
+                                                        <div class="d-flex align-items-center">
+                                                            <span class="badge bg-{{ t.urgence }} bg-opacity-10 text-{{ t.urgence }} scale-75 me-2">{{ t.statut }}</span>
+                                                            <a href="/supprimer/{{ t.id }}" class="text-danger small"><i class="fas fa-trash"></i></a>
+                                                        </div>
+                                                    </li>
+                                                {% endfor %}
+                                            </ul>
+                                        {% else %}
+                                            <p class="text-center text-muted m-0 small py-3"><i class="fas fa-ghost me-1"></i> Vide pour l'instant.</p>
+                                        {% endif %}
+                                        
+                                        <div class="d-grid">
+                                            <button class="btn btn-outline-primary btn-sm dashed-border" 
+                                                    data-bs-toggle="modal" 
+                                                    data-bs-target="#modalAddTacheProjet{{ p.infos.id }}">
+                                                <i class="fas fa-plus me-1"></i> Ajouter une tâche ici
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
+                    {% else %}
+                        <p class="text-center text-muted py-4">Commencez par créer un projet !</p>
                     {% endfor %}
                 </div>
             </div>
 
             <div id="tab-stats" class="tab-section d-none animate-slide-up">
                 <div class="row mt-4 g-4">
-                    <div class="col-md-6">
-                        <div class="app-card h-100">
-                            <h5 class="fw-bold mb-4">Répartition par Urgence</h5>
-                            <canvas id="chartUrgence"></canvas>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="app-card h-100">
-                            <h5 class="fw-bold mb-4">État global</h5>
-                            <canvas id="chartStatut"></canvas>
-                        </div>
-                    </div>
+                    <div class="col-md-6"><div class="app-card h-100"><h5 class="fw-bold mb-4">Urgence</h5><canvas id="chartUrgence"></canvas></div></div>
+                    <div class="col-md-6"><div class="app-card h-100"><h5 class="fw-bold mb-4">Statut</h5><canvas id="chartStatut"></canvas></div></div>
                 </div>
-                
-                <div id="statsData" 
-                     data-danger="{{ stats.danger }}" 
-                     data-warning="{{ stats.warning }}" 
-                     data-primary="{{ stats.primary }}"
-                     data-afaire="{{ a_faire|length }}"
-                     data-terminees="{{ terminees|length }}">
-                </div>
+                <div id="statsData" data-danger="{{ stats.danger }}" data-warning="{{ stats.warning }}" data-primary="{{ stats.primary }}" data-afaire="{{ a_faire|length }}" data-terminees="{{ terminees|length }}"></div>
             </div>
 
             <div id="tab-terminees" class="tab-section d-none animate-stagger">
@@ -201,7 +251,50 @@
         </main>
     </div>
 
+    {% for tache in a_faire %}
+    <div class="modal fade" id="modalModif{{ tache.id }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header border-0"><h5 class="modal-title">Modifier</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+                <form action="/modifier/{{ tache.id }}" method="POST">
+                    <div class="modal-body">
+                        <input type="text" name="titre" class="form-control mb-3" value="{{ tache.titre }}">
+                        <input type="date" name="date" class="form-control mb-3" value="{{ tache.date_echeance }}">
+                        <select name="urgence" class="form-select">
+                            <option value="primary" {% if tache.urgence == 'primary' %}selected{% endif %}>Normal</option>
+                            <option value="warning" {% if tache.urgence == 'warning' %}selected{% endif %}>Important</option>
+                            <option value="danger" {% if tache.urgence == 'danger' %}selected{% endif %}>Urgent</option>
+                        </select>
+                    </div>
+                    <div class="modal-footer border-0"><button class="btn btn-primary">Enregistrer</button></div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+
+    {% for p in projets %}
+    <div class="modal fade" id="modalAddTacheProjet{{ p.infos.id }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header border-0 bg-primary text-white"><h5 class="modal-title">Ajouter au projet : {{ p.infos.nom }}</h5><button class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+                <form action="/ajouter" method="POST">
+                    <div class="modal-body">
+                        <input type="hidden" name="projet_id" value="{{ p.infos.id }}">
+                        <label class="form-label text-muted small fw-bold">Titre de la tâche</label>
+                        <input type="text" name="titre" class="form-control mb-3" placeholder="Titre..." required>
+                        <label class="form-label text-muted small fw-bold">Urgence</label>
+                        <select name="urgence" class="form-select"><option value="primary">Normal</option><option value="warning">Important</option><option value="danger">Urgent</option></select>
+                    </div>
+                    <div class="modal-footer border-0"><button class="btn btn-primary">Créer</button></div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>
