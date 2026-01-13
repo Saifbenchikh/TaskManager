@@ -1,85 +1,103 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+:root {
+    --primary: #4F46E5;
+    --primary-hover: #4338ca;
+    --bg-body: #F3F4F6;
+    --bg-card: #ffffff;
+    --text-main: #111827;
+    --text-muted: #6b7280;
+    --border: #e5e7eb;
+    --sidebar-width: 250px;
+}
+
+[data-theme="dark"] {
+    --bg-body: #0f172a;
+    --bg-card: #1e293b;
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --border: #334155;
+}
 
 body {
-    background-color: #f0f2f5;
-    font-family: 'Poppins', sans-serif;
-    color: #333;
+    background-color: var(--bg-body);
+    color: var(--text-main);
+    font-family: 'Inter', sans-serif;
+    transition: background-color 0.3s ease;
 }
 
-.main-container {
-    max-width: 800px;
-    margin: auto;
-    padding-top: 50px;
-    padding-bottom: 50px;
-}
-
-h1 {
-    font-weight: 600;
-    color: #2c3e50;
-    margin-bottom: 30px;
-}
-
-#test
-.custom-card {
-    border: none;
-    border-radius: 20px;
-    background: white;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+/* SIDEBAR */
+.wrapper { display: flex; min-height: 100vh; }
+.sidebar {
+    width: var(--sidebar-width);
+    background: var(--bg-card);
+    border-right: 1px solid var(--border);
+    position: fixed;
+    height: 100vh;
     padding: 25px;
-    margin-bottom: 25px;
+    z-index: 1000;
 }
+.sidebar-header { font-size: 1.3rem; font-weight: 800; color: var(--primary); margin-bottom: 40px; }
+.nav-link {
+    display: flex; align-items: center; padding: 12px; color: var(--text-muted);
+    border-radius: 8px; margin-bottom: 5px; text-decoration: none; font-weight: 500; cursor: pointer; transition: 0.2s;
+}
+.nav-link:hover, .nav-link.active { background-color: rgba(79, 70, 229, 0.08); color: var(--primary); }
+.nav-link i { width: 25px; }
 
+/* CONTENU */
+.main-content { flex: 1; margin-left: var(--sidebar-width); padding: 40px; }
 
-.form-control {
-    background-color: #f8f9fa;
-    border: 2px solid #eee;
+/* CARTES */
+.app-card {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border);
     border-radius: 12px;
-    padding: 12px;
-    transition: all 0.3s;
+    padding: 25px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 
-.form-control:focus {
-    background-color: white;
-    border-color: #764ba2;
-    box-shadow: none;
+/* ANIMATIONS PRO */
+/* 1. Slide Up simple (pour le formulaire) */
+.animate-slide-up {
+    animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    opacity: 0; transform: translateY(20px);
 }
 
-
-.btn-gradient {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border: none;
-    border-radius: 12px;
-    color: white;
-    font-weight: 600;
-    padding: 12px;
-    transition: transform 0.2s;
+/* 2. Stagger (Cascade) pour les listes */
+.animate-stagger .task-item, 
+.animate-stagger .app-card,
+.animate-stagger .col-md-6 {
+    opacity: 0;
+    animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-.btn-gradient:hover {
-    transform: scale(1.02);
-    color: white;
+/* Décalage pour chaque élément (jusqu'à 10) */
+.animate-stagger > *:nth-child(1) { animation-delay: 0.05s; }
+.animate-stagger > *:nth-child(2) { animation-delay: 0.1s; }
+.animate-stagger > *:nth-child(3) { animation-delay: 0.15s; }
+.animate-stagger > *:nth-child(4) { animation-delay: 0.2s; }
+.animate-stagger > *:nth-child(5) { animation-delay: 0.25s; }
+
+@keyframes slideUp {
+    to { opacity: 1; transform: translateY(0); }
 }
 
+/* BOUTON CHECK (Effet tactile) */
+.btn-check-anim:active { transform: scale(0.9); transition: transform 0.1s; }
 
-.task-item {
-    background: white;
-    border-bottom: 1px solid #f0f0f0;
-    padding: 15px 0;
-    transition: background 0.2s;
+/* INPUTS */
+.form-control, .form-select {
+    background-color: var(--bg-body); border: 1px solid var(--border); color: var(--text-main);
+    padding: 10px 15px; border-radius: 8px;
 }
+.form-control:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
 
-.task-item:last-child {
-    border-bottom: none;
-}
-
-.task-item:hover {
-    background-color: #fafafa;
-}
-
-.badge-custom {
-    padding: 8px 12px;
-    border-radius: 8px;
-    font-weight: 500;
-    font-size: 0.8em;
+/* MOBILE */
+.burger-btn { display: none; }
+@media (max-width: 768px) {
+    .sidebar { transform: translateX(-100%); transition: 0.3s; }
+    .sidebar.active { transform: translateX(0); }
+    .main-content { margin-left: 0; padding: 20px; padding-top: 70px; }
+    .burger-btn { display: block; position: fixed; top: 15px; left: 15px; z-index: 2000; background: var(--primary); color: white; border: none; padding: 8px 12px; border-radius: 6px; }
 }
