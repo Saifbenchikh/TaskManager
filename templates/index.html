@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Task Master Pro</title>
+    <title>TaskManager 2 feuj</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
@@ -15,7 +15,7 @@
     <div class="wrapper">
         
         <nav class="sidebar" id="sidebar">
-            <div class="sidebar-header"><i class="fas fa-layer-group"></i> TaskMaster</div>
+            <div class="sidebar-header"><i class="fas fa-layer-group"></i> TaskManager</div>
             <div class="d-flex flex-column h-100">
                 <a class="nav-link active" href="#" onclick="showTab(event, 'afaire')">
                     <i class="fas fa-list-check"></i> À faire <span class="badge bg-primary ms-auto">{{ a_faire|length }}</span>
@@ -43,11 +43,11 @@
                         </button>
                         <ul class="dropdown-menu shadow border-0">
                             <li><h6 class="dropdown-header">Ordre d'affichage des dossiers</h6></li>
-                            <li><a class="dropdown-item" href="/?trie={{ current_sort }}&trie_projets=defaut">🕒 Par défaut (Création)</a></li>
-                            <li><a class="dropdown-item" href="/?trie={{ current_sort }}&trie_projets=nom">🔤 Nom (A-Z)</a></li>
+                            <li><a class="dropdown-item" href="/?trie={{ current_sort }}&trie_projets=defaut"> Par défaut (Création)</a></li>
+                            <li><a class="dropdown-item" href="/?trie={{ current_sort }}&trie_projets=nom"> Nom (A-Z)</a></li>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="/?trie={{ current_sort }}&trie_projets=progress_desc">📈 Avancement (Le + fini)</a></li>
-                            <li><a class="dropdown-item" href="/?trie={{ current_sort }}&trie_projets=progress_asc">📉 Avancement (Le - fini)</a></li>
+                            <li><a class="dropdown-item" href="/?trie={{ current_sort }}&trie_projets=progress_desc"> Avancement (Le + fini)</a></li>
+                            <li><a class="dropdown-item" href="/?trie={{ current_sort }}&trie_projets=progress_asc"> Avancement (Le - fini)</a></li>
                         </ul>
                     </div>
 
@@ -94,9 +94,9 @@
                                 <i class="fas fa-sort-amount-down me-1 text-muted"></i> Trier
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end shadow border-0">
-                                <li><a class="dropdown-item" href="/?trie=urgence&trie_projets={{ current_proj_sort }}">🔥 Par Urgence</a></li>
-                                <li><a class="dropdown-item" href="/?trie=date_croissante&trie_projets={{ current_proj_sort }}">📅 Par Date (Proche -> Loin)</a></li>
-                                <li><a class="dropdown-item" href="/?trie=alphabetique&trie_projets={{ current_proj_sort }}">🔤 Alphabétique (A-Z)</a></li>
+                                <li><a class="dropdown-item" href="/?trie=urgence&trie_projets={{ current_proj_sort }}"> Par Urgence</a></li>
+                                <li><a class="dropdown-item" href="/?trie=date_croissante&trie_projets={{ current_proj_sort }}"> Par Date (Proche -> Loin)</a></li>
+                                <li><a class="dropdown-item" href="/?trie=alphabetique&trie_projets={{ current_proj_sort }}"> Alphabétique (A-Z)</a></li>
                             </ul>
                         </div>
                     </div>
@@ -116,8 +116,8 @@
                             <div class="dropdown">
                                 <button class="btn btn-link text-muted" type="button" data-bs-toggle="dropdown"><i class="fas fa-ellipsis-v"></i></button>
                                 <ul class="dropdown-menu dropdown-menu-end border-0 shadow">
-                                    <li><button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#modalModif{{ tache.id }}">✏️ Modifier</button></li>
-                                    <li><a class="dropdown-item text-danger" href="/supprimer/{{ tache.id }}">🗑️ Supprimer</a></li>
+                                    <li><button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#modalModif{{ tache.id }}"> Modifier</button></li>
+                                    <li><a class="dropdown-item text-danger" href="/supprimer/{{ tache.id }}"> Supprimer</a></li>
                                 </ul>
                             </div>
                         </div>
@@ -168,8 +168,8 @@
                                                 <i class="fas fa-sort me-1"></i> Trier les tâches
                                             </button>
                                             <ul class="dropdown-menu shadow border-0" style="font-size: 0.9rem;">
-                                                <li><a class="dropdown-item" href="/?trie=urgence&trie_projets={{ current_proj_sort }}">🔥 Par Urgence</a></li>
-                                                <li><a class="dropdown-item" href="/?trie=alphabetique&trie_projets={{ current_proj_sort }}">🔤 Alphabétique</a></li>
+                                                <li><a class="dropdown-item" href="/?trie=urgence&trie_projets={{ current_proj_sort }}"> Par Urgence</a></li>
+                                                <li><a class="dropdown-item" href="/?trie=alphabetique&trie_projets={{ current_proj_sort }}"> Alphabétique</a></li>
                                             </ul>
                                         </div>
 
@@ -178,7 +178,7 @@
                                                    id="switchCompleted{{ p.infos.id }}" 
                                                    onchange="toggleProjectCompleted('{{ p.infos.id }}')" checked>
                                             <label class="form-check-label small text-muted fw-bold" for="switchCompleted{{ p.infos.id }}">
-                                                Voir finies
+                                                Voir les taches finies
                                             </label>
                                         </div>
                                     </div>
