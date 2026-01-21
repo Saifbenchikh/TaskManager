@@ -1,14 +1,12 @@
 import sqlite3
 
-# 1. Connexion à la base de données (elle sera créée si elle n'existe pas)
+
 connection = sqlite3.connect('database.db')
 
-# 2. On crée un curseur pour exécuter des commandes SQL
+# crée un curseur pour exécuter des commandes SQL
 cur = connection.cursor()
 
-# 3. Création de la table 'tasks' (Taches)
-# J'ai repris les champs de ton code actuel (titre, statut, urgence)
-# et ajouté ceux demandés par le cahier des charges (date, recurrence, etc.)
+
 cur.execute('''
     CREATE TABLE IF NOT EXISTS tasks (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -20,11 +18,11 @@ cur.execute('''
     )
 ''')
 #test
-# 4. (Optionnel) Ajouter une tâche de test pour vérifier que ça marche
+# Ajout d'une tâche de test pour vérifier que ça marche
 cur.execute("INSERT INTO tasks (titre, statut, urgence) VALUES (?, ?, ?)",
             ('Finir le projet SQL', 'A faire', 'danger'))
 
-# 5. Valider les changements et fermer la connexion
+#  Valider les changements et fermer la connexion
 connection.commit()
 connection.close()
 

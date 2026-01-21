@@ -15,20 +15,20 @@ function showTab(event, tabId) {
     const activeLink = document.querySelector(`.nav-link[onclick*="'${tabId}'"]`);
     if (activeLink) activeLink.classList.add('active');
     
-    // --- NOUVEAU : GESTION VISIBILITÉ BOUTON TRI PROJETS ---
+    // GESTION VISIBILITÉ BOUTON TRI PROJETS
     const btnSort = document.getElementById('btnSortProjects');
     if (btnSort) {
         if (tabId === 'projets') {
-            btnSort.classList.remove('d-none'); // Affiche si onglet Projets
+            btnSort.classList.remove('d-none'); 
         } else {
-            btnSort.classList.add('d-none');    // Cache sinon
+            btnSort.classList.add('d-none');   
         }
     }
 
     localStorage.setItem('activeTab', tabId);
 }
 
-// --- GESTION PROJETS (OUVERTURE) ---
+//  GESTION PROJETS 
 document.addEventListener('shown.bs.collapse', function (e) {
     if (e.target.id.startsWith('collapseProjet')) {
         let openProjects = JSON.parse(localStorage.getItem('openProjects')) || [];
@@ -46,7 +46,7 @@ document.addEventListener('hidden.bs.collapse', function (e) {
     }
 });
 
-// --- GESTION DU MASQUAGE DES TÂCHES TERMINÉES ---
+//  GESTION DU MASQUAGE DES TÂCHES TERMINÉES 
 function toggleProjectCompleted(projectId) {
     const isChecked = document.getElementById('switchCompleted' + projectId).checked;
     const container = document.getElementById('collapseProjet' + projectId);
@@ -64,11 +64,11 @@ function toggleProjectCompleted(projectId) {
 
 // AU CHARGEMENT DE LA PAGE
 document.addEventListener('DOMContentLoaded', function() {
-    // 1. Restauration Onglet
+
     const savedTab = localStorage.getItem('activeTab') || 'afaire';
     showTab(null, savedTab);
 
-    // 2. Restauration Projets Ouverts
+    // Restauration Projets Ouverts
     const openProjects = JSON.parse(localStorage.getItem('openProjects')) || [];
     openProjects.forEach(id => {
         const element = document.getElementById(id);
@@ -79,7 +79,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // 3. Restauration des interrupteurs
+    // Restauration des interrupteurs
     const allSwitches = document.querySelectorAll('[id^="switchCompleted"]');
     allSwitches.forEach(switchEl => {
         const projectId = switchEl.id.replace('switchCompleted', '');
@@ -90,7 +90,7 @@ document.addEventListener('DOMContentLoaded', function() {
         toggleProjectCompleted(projectId);
     });
 
-    // --- GRAPHIQUES ---
+    //  GRAPHIQUES 
     const dataDiv = document.getElementById('statsData');
     if (!dataDiv) return;
 

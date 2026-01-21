@@ -13,7 +13,7 @@ def get_db_connection():
 def accueil():
     conn = get_db_connection()
     
-    # --- LOGIQUE DE TRI ---
+    #  LOGIQUE DE TRI 
     filtre = request.args.get('trie', 'defaut')
     sql_query = 'SELECT * FROM tasks'
     
@@ -40,7 +40,7 @@ def accueil():
     projets_db = conn.execute('SELECT * FROM projects').fetchall()
     conn.close()
     
-    # --- PREPARATION DES DONNEES ---
+    # PREPARATION DES DONNEES 
     liste_projets = []
     for p in projets_db:
         taches_projet = [t for t in taches if t['project_id'] == p['id']]
@@ -55,7 +55,7 @@ def accueil():
     
     today = date.today().isoformat()
     
-    # Statistiques
+    # Statistiques test1
     stat_danger = len([t for t in taches if t['urgence'] == 'danger'])
     stat_warning = len([t for t in taches if t['urgence'] == 'warning'])
     stat_primary = len([t for t in taches if t['urgence'] == 'primary'])
@@ -67,20 +67,19 @@ def accueil():
                            today=today,
                            stats={'danger': stat_danger, 'warning': stat_warning, 'primary': stat_primary})
 
-# --- ROUTES D'ACTION ---
+#  ROUTES D'ACTION 
 
 @app.route('/ajouter', methods=['POST'])
 def ajouter_tache():
-    # C'EST ICI QUE L'ERREUR SE PRODUISAIT SOUVENT
-    # On s'assure de bien utiliser les parenthèses ()
+    
     titre = request.form.get('titre')
     date_echeance = request.form.get('date')
     urgence = request.form.get('urgence')
     
-    # Récupération sécurisée de l'ID projet
+    
     projet_id = request.form.get('projet_id')
     
-    # Si projet_id est vide ou une chaine vide, on le met à None
+    
     if not projet_id or projet_id.strip() == "":
         projet_id = None
 
@@ -90,8 +89,7 @@ def ajouter_tache():
     conn.commit()
     conn.close()
     
-    # On redirige simplement vers l'accueil. 
-    # Le Javascript (script.js) s'occupera de rouvrir le bon onglet.
+    
     return redirect('/')
 
 @app.route('/modifier/<int:id>', methods=['POST'])
@@ -122,7 +120,7 @@ def valider_tache(id):
     conn.execute("UPDATE tasks SET statut = 'Terminée' WHERE id = ?", (id,))
     conn.commit()
     conn.close()
-    # Cette astuce permet de rester sur la même page sans recharger tout l'historique
+    
     return redirect('/')
 
 @app.route('/invalider/<int:id>')
