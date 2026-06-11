@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Paramètres Compte - TaskManager</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+    <button class="burger-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+
+    <div class="wrapper">
+        <nav class="sidebar" id="sidebar">
+            <div class="sidebar-header"><i class="fas fa-layer-group"></i> TaskManager</div>
+            <div class="d-flex flex-column h-100 w-100">
+                <a class="nav-link" href="/">
+                    <i class="fas fa-arrow-left"></i> Tableau de bord
+                </a>
+                
+                <div class="mt-auto pt-3 border-top pb-2">
+                    <div class="dropdown mb-3">
+                        <a href="#" class="nav-link text-muted d-flex align-items-center dropdown-toggle w-100 p-2 active" data-bs-toggle="dropdown" aria-expanded="false" style="cursor: pointer;">
+                            <i class="fas fa-user-circle text-primary fs-4 me-2"></i>
+                            <span class="fw-bold flex-grow-1 text-truncate">{{ username }}</span>
+                        </a>
+                        <ul class="dropdown-menu shadow-lg border-0 rounded-4 w-100 mb-2">
+                            <li><a class="dropdown-item py-2 fw-medium active" href="/profile"><i class="fas fa-user-cog me-2"></i> Mon compte</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger py-2 fw-bold" href="/logout"><i class="fas fa-sign-out-alt me-2"></i> Déconnexion</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <main class="main-content">
+            <div class="profile-banner-container">
+                <div class="profile-banner-bg"></div>
+                <div class="profile-avatar-wrapper">
+                    
+                    <div class="profile-avatar-circle position-relative shadow-lg" style="cursor:pointer;" onclick="document.getElementById('avatarUpload').click()" title="Modifier la photo">
+                        {% if user.avatar %}
+                            <img src="{{ url_for('static', filename='uploads/avatars/' + user.avatar) }}" class="w-100 h-100 rounded-circle object-fit-cover" alt="Avatar">
+                        {% else %}
+                            {{ username[:2] | upper }}
+                        {% endif %}
+                        <div class="position-absolute bottom-0 end-0 bg-primary text-white rounded-circle shadow-sm" style="width:32px;height:32px;font-size:0.9rem;display:flex;align-items:center;justify-content:center;transform:translate(10%, 10%); border: 3px solid var(--bg-card);">
+                            <i class="fas fa-camera"></i>
+                        </div>
+                    </div>
+
+                    <form id="avatarForm" action="/profile" method="POST" enctype="multipart/form-data" class="d-none">
+                        <input type="hidden" name="action" value="avatar">
+                        <input type="file" id="avatarUpload" name="avatar" accept="image/png, image/jpeg, image/gif" onchange="document.getElementById('avatarForm').submit()">
+                    </form>
+
+                    <div class="profile-avatar-info mb-2">
+                        <h4>Réglages du profil</h4>
+                        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill px-3">Membre Standard</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-container">
+                <div class="settings-sidebar d-none d-lg-block">
+                    <a href="#" class="settings-nav-item active" onclick="showProfileTab(event, 'general')"><i class="fas fa-id-card"></i> Général</a>
+                    <a href="#" class="settings-nav-item" onclick="showProfileTab(event, 'securite')"><i class="fas fa-shield-alt"></i> Sécurité avancée</a>
+                    <a href="#" class="settings-nav-item" onclick="showProfileTab(event, 'themes')"><i class="fas fa-palette"></i> Thèmes & UI</a>
+                    <a href="#" class="settings-nav-item" onclick="showProfileTab(event, 'notifs')"><i class="fas fa-bell"></i> Notifications</a>
+                </div>
+
+                <div class="settings-content">
+                    
+                    <div id="ptab-general" class="profile-tab-section animate-stagger">
+                        <div class="app-card shadow-sm">
+                            <h5 class="fw-800 mb-2">Informations personnelles</h5>
+                            <p class="text-muted small mb-4">Mettez à jour vos identifiants de connexion.</p>
+                            <form action="/profile" method="POST">
+                                <input type="hidden" name="action" value="general">
+                                <div class="row g-4">
+                                    <div class="col-md-6">
+                                        <label class="form-label small text-muted fw-bold mb-2">Nom d'utilisateur</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                            <input type="text" name="username" class="form-control" value="{{ user.username }}" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small text-muted fw-bold mb-2">Adresse Email</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                                            <input type="email" name="email" class="form-control" value="{{ user.email }}" required>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="d-flex justify-content-end mt-4 pt-3 border-top">
+                                    <button type="submit" class="btn btn-primary px-4">Sauvegarder</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div id="ptab-securite" class="profile-tab-section d-none animate-stagger">
+                        <div class="app-card shadow-sm border-danger border-opacity-25">
+                            <h5 class="fw-800 mb-2">Sécurité du compte</h5>
+                            <p class="text-muted small mb-4">Renforcez la sécurité de vos données.</p>
+                            <form action="/profile" method="POST">
+                                <input type="hidden" name="action" value="security">
+                                <div class="row g-4">
+                                    <div class="col-12">
+                                        <label class="form-label small text-muted fw-bold mb-2">Nouveau mot de passe</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                            <input type="password" name="password" class="form-control" placeholder="Entrez un mot de passe complexe..." required>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="d-flex justify-content-end mt-4 pt-3 border-top">
+                                    <button type="submit" class="btn btn-primary px-4">Mettre à jour le mot de passe</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div id="ptab-themes" class="profile-tab-section d-none animate-stagger">
+                        <div class="app-card shadow-sm">
+                            <h5 class="fw-800 mb-2">Personnalisation de l'interface</h5>
+                            <p class="text-muted small mb-4">Ajustez l'apparence de votre espace de travail.</p>
+                            <form action="/profile" method="POST">
+                                <input type="hidden" name="action" value="prefs">
+                                <input type="hidden" name="notif_email" value="{{ user.notif_email }}">
+                                <input type="hidden" name="notif_push" value="{{ user.notif_push }}">
+                                
+                                <div class="row g-3 mb-4">
+                                    <div class="col-md-6">
+                                        <label class="w-100 p-4 border rounded-4 text-center task-item" style="cursor:pointer;" onclick="applyTheme('light')">
+                                            <input type="radio" name="theme" value="light" class="d-none" {% if user.theme == 'light' %}checked{% endif %}>
+                                            <i class="fas fa-sun fs-1 text-warning mb-3"></i>
+                                            <div class="fw-bold text-muted fs-5">Mode Clair</div>
+                                        </label>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="w-100 p-4 border rounded-4 text-center bg-dark border-dark" style="cursor:pointer;" onclick="applyTheme('dark')">
+                                            <input type="radio" name="theme" value="dark" class="d-none" {% if user.theme == 'dark' %}checked{% endif %}>
+                                            <i class="fas fa-moon fs-1 text-info mb-3"></i>
+                                            <div class="fw-bold text-white fs-5">Mode Sombre</div>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="d-flex justify-content-end mt-4 pt-3 border-top">
+                                    <button type="submit" class="btn btn-primary px-4">Enregistrer le thème</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div id="ptab-notifs" class="profile-tab-section d-none animate-stagger">
+                        <div class="app-card shadow-sm">
+                            <h5 class="fw-800 mb-2">Préférences de communication</h5>
+                            <p class="text-muted small mb-4">Contrôlez les alertes générées par l'application.</p>
+                            <form action="/profile" method="POST">
+                                <input type="hidden" name="action" value="prefs">
+                                <input type="hidden" name="theme" value="{{ user.theme }}">
+                                
+                                <div class="form-check form-switch fs-5 mb-3 p-3 border rounded-3 bg-body">
+                                    <input class="form-check-input ms-0 me-3" type="checkbox" role="switch" name="notif_email" id="notif1" value="1" {% if user.notif_email %}checked{% endif %}>
+                                    <label class="form-check-label fs-6 fw-bold" for="notif1">Mails de rappel hebdomadaire</label>
+                                </div>
+                                <div class="form-check form-switch fs-5 mb-4 p-3 border rounded-3 bg-body">
+                                    <input class="form-check-input ms-0 me-3" type="checkbox" role="switch" name="notif_push" id="notif2" value="1" {% if user.notif_push %}checked{% endif %}>
+                                    <label class="form-check-label fs-6 fw-bold" for="notif2">Alertes critiques (Échéances dépassées)</label>
+                                </div>
+                                <div class="d-flex justify-content-end mt-4 pt-3 border-top">
+                                    <button type="submit" class="btn btn-primary px-4">Sauvegarder les notifications</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    {% for category, message in messages %}
+                        createToast("{{ message }}", "{{ 'success' if category == 'success' else 'danger' }}");
+                    {% endfor %}
+                });
+            </script>
+        {% endif %}
+    {% endwith %}
+
+    <div class="chatbot-fab" onclick="toggleChat()">
+        <i class="fas fa-robot"></i>
+    </div>
+
+    <div class="chatbot-window" id="chatbotWindow">
+        <div class="chatbot-header d-flex justify-content-between align-items-center">
+            <div><i class="fas fa-robot me-2"></i> Assistant IA</div>
+            <button class="btn-close btn-close-white" onclick="toggleChat()"></button>
+        </div>
+        <div class="chatbot-messages" id="chatbotMessages">
+            <div class="message bot-message">
+                Bonjour {{ username }} ! Je suis là pour vous aider à gérer vos projets. Que souhaitez-vous faire ?
+            </div>
+        </div>
+        <div class="chatbot-input">
+            <input type="text" id="chatInput" placeholder="Posez une question..." onkeypress="handleChatKeyPress(event)">
+            <button onclick="sendChatMessage()"><i class="fas fa-paper-plane"></i></button>
+        </div>
+    </div>
+
+</body>
+</html>

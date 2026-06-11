@@ -1,12 +1,24 @@
+import os
 import sqlite3
-from flask import Flask, render_template, request, redirect, url_for, session, flash
+import json
+import re
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
 from functools import wraps
 from datetime import date
 
 app = Flask(__name__)
-# Clé secrète nécessaire pour utiliser les sessions Flask en toute sécurité
 app.secret_key = 'super_cle_secrete_a_changer_en_production'
+
+# --- CONFIGURATION UPLOAD AVATARS ---
+UPLOAD_FOLDER = os.path.join('static', 'uploads', 'avatars')
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def get_db_connection():
     conn = sqlite3.connect('database.db')
@@ -30,7 +42,6 @@ def register():
         email = request.form['email']
         password = request.form['password']
         
-        # Hachage du mot de passe
         hash_pwd = generate_password_hash(password)
         
         conn = get_db_connection()
@@ -57,7 +68,6 @@ def login():
         user = conn.execute('SELECT * FROM users WHERE username = ?', (username,)).fetchone()
         conn.close()
         
-        # Vérification du mot de passe haché
         if user and check_password_hash(user['password_hash'], password):
             session['user_id'] = user['id']
             session['username'] = user['username']
@@ -69,17 +79,75 @@ def login():
 
 @app.route('/logout')
 def logout():
-    session.clear() # Vide la session
+    session.clear()
     return redirect(url_for('login'))
 
-# --- ROUTES DE L'APPLICATION (SÉCURISÉES) ---
+# --- ROUTE GESTION DE COMPTE / PROFIL ---
+@app.route('/profile', methods=['GET', 'POST'])
+@login_required
+def profile():
+    user_id = session['user_id']
+    conn = get_db_connection()
+    
+    if request.method == 'POST':
+        action = request.form.get('action')
+        
+        # 1. Mise à jour des infos générales
+        if action == 'general':
+            username = request.form.get('username')
+            email = request.form.get('email')
+            try:
+                conn.execute('UPDATE users SET username = ?, email = ? WHERE id = ?', (username, email, user_id))
+                conn.commit()
+                session['username'] = username
+                flash('Informations générales mises à jour !', 'success')
+            except sqlite3.IntegrityError:
+                flash('Erreur : Cet email ou pseudo est déjà pris.', 'danger')
+
+        # 2. Mise à jour du mot de passe
+        elif action == 'security':
+            new_password = request.form.get('password')
+            if new_password:
+                hash_pwd = generate_password_hash(new_password)
+                conn.execute('UPDATE users SET password_hash = ? WHERE id = ?', (hash_pwd, user_id))
+                conn.commit()
+                flash('Mot de passe mis à jour avec succès !', 'success')
+                
+        # 3. Mise à jour des préférences (Thème & Notifs)
+        elif action == 'prefs':
+            theme = request.form.get('theme', 'system')
+            notif_email = 1 if request.form.get('notif_email') else 0
+            notif_push = 1 if request.form.get('notif_push') else 0
+            conn.execute('UPDATE users SET theme = ?, notif_email = ?, notif_push = ? WHERE id = ?', 
+                         (theme, notif_email, notif_push, user_id))
+            conn.commit()
+            flash('Préférences sauvegardées !', 'success')
+
+        # 4. Upload de l'Avatar
+        elif action == 'avatar':
+            if 'avatar' in request.files:
+                file = request.files['avatar']
+                if file and file.filename != '' and allowed_file(file.filename):
+                    filename = secure_filename(f"user_{user_id}_{file.filename}")
+                    file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                    conn.execute('UPDATE users SET avatar = ? WHERE id = ?', (filename, user_id))
+                    conn.commit()
+                    flash('Photo de profil mise à jour !', 'success')
+        
+        conn.close()
+        return redirect(url_for('profile'))
+        
+    user = conn.execute('SELECT * FROM users WHERE id = ?', (user_id,)).fetchone()
+    conn.close()
+    return render_template('profile.html', user=user, username=session.get('username'))
+
+# --- ROUTES DE L'APPLICATION ---
 @app.route("/")
 @login_required
 def accueil():
     conn = get_db_connection()
     user_id = session['user_id']
     
-    # Sécurisation : On filtre UNIQUEMENT les tâches de l'utilisateur
     filtre = request.args.get('trie', 'defaut')
     sql_query = 'SELECT * FROM tasks WHERE user_id = ?'
     
@@ -114,11 +182,40 @@ def accueil():
     stat_warning = len([t for t in taches if t['urgence'] == 'warning'])
     stat_primary = len([t for t in taches if t['urgence'] == 'primary'])
 
+    total_taches = len(taches)
+    total_terminees = len([t for t in taches if t['statut'] == 'Terminée'])
+    taux_completion = int((total_terminees / total_taches) * 100) if total_taches > 0 else 0
+
+    stats_kpi = {
+        'total_taches': total_taches,
+        'terminees': total_terminees,
+        'taux_completion': taux_completion,
+        'projets_actifs': len(liste_projets)
+    }
+
+    radar_labels = [p['infos']['nom'] for p in liste_projets]
+    radar_data = [len(p['taches']) for p in liste_projets]
+
+    dates_taches = {}
+    for t in taches:
+        if t['date_echeance'] and t['statut'] == 'A faire':
+            date_str = t['date_echeance']
+            dates_taches[date_str] = dates_taches.get(date_str, 0) + 1
+    
+    dates_triees = sorted(dates_taches.keys())
+    line_labels = dates_triees[:7]
+    line_data = [dates_taches[d] for d in line_labels]
+
     return render_template("index.html", 
                            a_faire=a_faire, terminees=terminees, 
                            projets=liste_projets, today=today,
                            stats={'danger': stat_danger, 'warning': stat_warning, 'primary': stat_primary},
-                           username=session.get('username')) # On passe le nom d'utilisateur
+                           stats_kpi=stats_kpi,
+                           radar_labels=json.dumps(radar_labels),
+                           radar_data=json.dumps(radar_data),
+                           line_labels=json.dumps(line_labels),
+                           line_data=json.dumps(line_data),
+                           username=session.get('username'))
 
 @app.route('/ajouter', methods=['POST'])
 @login_required
@@ -145,7 +242,6 @@ def modifier_tache(id):
     user_id = session['user_id']
     
     conn = get_db_connection()
-    # Sécurisation : On vérifie que la tâche appartient bien au user (IDOR prevention)
     conn.execute('UPDATE tasks SET titre = ?, date_echeance = ?, urgence = ? WHERE id = ? AND user_id = ?',
                  (titre, date_echeance, urgence, id, user_id))
     conn.commit()
@@ -189,6 +285,55 @@ def supprimer_tache(id):
     conn.commit()
     conn.close()
     return redirect('/')
+
+# --- ROUTE CHATBOT API ---
+@app.route('/api/chat', methods=['POST'])
+@login_required
+def api_chat():
+    data = request.get_json()
+    user_message = data.get('message', '').lower().strip()
+    user_id = session['user_id']
+    username = session.get('username', 'Utilisateur')
+
+    if user_message in ['bonjour', 'salut', 'hello', 'coucou']:
+        return jsonify({'reply': f"Bonjour {username} ! Comment puis-je vous aider aujourd'hui ?"})
+
+    if 'résumé' in user_message or 'resume' in user_message or 'bilan' in user_message:
+        conn = get_db_connection()
+        urgent_count = conn.execute(
+            "SELECT COUNT(*) FROM tasks WHERE user_id = ? AND urgence = 'danger' AND statut = 'A faire'", 
+            (user_id,)
+        ).fetchone()[0]
+        conn.close()
+        
+        if urgent_count > 0:
+            return jsonify({'reply': f"Vous avez actuellement {urgent_count} tâche(s) urgente(s) en attente. Ne relâchez pas vos efforts !"})
+        else:
+            return jsonify({'reply': "Excellente nouvelle, vous n'avez aucune tâche urgente en attente !"})
+
+    if 'ajouter' in user_message and ('tâche' in user_message or 'tache' in user_message):
+        clean_msg = re.sub(r'ajouter\s+(une\s+)?t[aâ]che\s+', '', user_message, flags=re.IGNORECASE)
+        
+        urgence = 'primary'
+        if 'urgent' in clean_msg:
+            urgence = 'danger'
+            clean_msg = clean_msg.replace('urgent', '').strip()
+        elif 'important' in clean_msg:
+            urgence = 'warning'
+            clean_msg = clean_msg.replace('important', '').strip()
+
+        if clean_msg:
+            titre = clean_msg.capitalize()
+            conn = get_db_connection()
+            conn.execute('INSERT INTO tasks (titre, statut, urgence, user_id) VALUES (?, ?, ?, ?)',
+                         (titre, 'A faire', urgence, user_id))
+            conn.commit()
+            conn.close()
+            return jsonify({'reply': f'Tâche ajoutée avec succès : "{titre}". Rechargez la page pour la voir apparaître !', 'action': 'reload'})
+        else:
+            return jsonify({'reply': 'Veuillez préciser le nom de la tâche. Exemple : "Ajouter tâche faire les courses urgent".'})
+
+    return jsonify({'reply': "Désolé, je ne suis pas sûr de comprendre. Essayez de dire 'bonjour', 'résumé', ou 'ajouter tâche [nom de la tâche] urgent'."})
 
 if __name__ == "__main__":
     app.run(debug=True)
