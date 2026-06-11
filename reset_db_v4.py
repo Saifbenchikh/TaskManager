@@ -8,13 +8,17 @@ cursor.execute("DROP TABLE IF EXISTS tasks")
 cursor.execute("DROP TABLE IF EXISTS projects")
 cursor.execute("DROP TABLE IF EXISTS users")
 
-# Création de la table USERS
+# Création de la table USERS (incluant avatar, theme, et notifications)
 cursor.execute('''
     CREATE TABLE users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT UNIQUE NOT NULL,
         email TEXT UNIQUE NOT NULL,
-        password_hash TEXT NOT NULL
+        password_hash TEXT NOT NULL,
+        avatar TEXT DEFAULT NULL,
+        theme TEXT DEFAULT 'system',
+        notif_email INTEGER DEFAULT 1,
+        notif_push INTEGER DEFAULT 1
     )
 ''')
 
@@ -46,4 +50,4 @@ cursor.execute('''
 
 connection.commit()
 connection.close()
-print("✅ Base de données V4 initialisée avec gestion des utilisateurs !")
+print("✅ Base de données initialisée avec TOUTES les colonnes (avatar, theme, notifs) !")

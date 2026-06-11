@@ -6,6 +6,20 @@
     <title>TaskManager - Tableau de Bord</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        #calendar { max-width: 100%; margin: 0 auto; min-height: 600px; padding-top: 10px; }
+        .fc-theme-standard td, .fc-theme-standard th { border-color: var(--border) !important; }
+        .fc-col-header-cell { padding: 10px 0 !important; background-color: var(--bg-surface) !important; color: var(--text-muted); }
+        .fc-daygrid-day { background-color: var(--bg-card); transition: background-color 0.2s; }
+        .fc-daygrid-day:hover { background-color: var(--bg-surface); cursor: pointer; }
+        .fc-day-today { background-color: var(--primary-glow) !important; }
+        .fc-event { border: none !important; border-radius: 6px; padding: 3px 6px; font-weight: 600; cursor: pointer; transition: transform 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .fc-event:hover { transform: translateY(-1px); box-shadow: 0 4px 6px rgba(0,0,0,0.15); filter: brightness(1.1); }
+        .fc-toolbar-title { font-weight: 800 !important; color: var(--text-main); font-size: 1.5rem !important; }
+        .fc .fc-button-primary { background-color: var(--primary); border-color: var(--primary); font-weight: 600; text-transform: capitalize; border-radius: 8px; }
+        .fc .fc-button-primary:hover { background-color: var(--primary-hover); border-color: var(--primary-hover); }
+        .fc .fc-button-primary:not(:disabled).fc-button-active, .fc .fc-button-primary:not(:disabled):active { background-color: var(--primary-hover); border-color: var(--primary-hover); }
+    </style>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
@@ -19,6 +33,7 @@
                 <a class="nav-link active" href="#" onclick="showTab(event, 'afaire')">
                     <i class="fas fa-list-check"></i> À faire <span class="badge bg-primary ms-auto rounded-pill px-3">{{ a_faire|length }}</span>
                 </a>
+                <a class="nav-link" href="#" onclick="showTab(event, 'calendar')"><i class="fas fa-calendar-alt"></i> Calendrier</a>
                 <a class="nav-link" href="#" onclick="showTab(event, 'projets')"><i class="fas fa-folder-open"></i> Projets</a>
                 <a class="nav-link" href="#" onclick="showTab(event, 'stats')"><i class="fas fa-chart-pie"></i> Statistiques</a>
                 <a class="nav-link" href="#" onclick="showTab(event, 'terminees')"><i class="fas fa-history"></i> Historique</a>
@@ -90,8 +105,8 @@
                             <input type="text" name="titre" class="form-control" placeholder="Que devez-vous accomplir ?" required>
                         </div>
                         <div class="col-md-3">
-                            <label class="small text-muted fw-bold mb-2">Échéance</label>
-                            <input type="date" name="date" class="form-control">
+                            <label class="small text-muted fw-bold mb-2">Échéance & Heure</label>
+                            <input type="datetime-local" name="date" class="form-control">
                         </div>
                         <div class="col-md-2">
                             <label class="small text-muted fw-bold mb-2">Priorité</label>
@@ -130,7 +145,9 @@
                                     <div class="fw-bold fs-6">{{ tache.titre }}</div>
                                     <div class="small text-muted mt-1">
                                         <span class="badge bg-{{ tache.urgence }} bg-opacity-10 text-{{ tache.urgence }} border border-{{ tache.urgence }} border-opacity-25 rounded-pill px-2">{{ tache.urgence }}</span>
-                                        {% if tache.date_echeance %} <i class="far fa-clock ms-2 me-1"></i> {{ tache.date_echeance }} {% endif %}
+                                        {% if tache.date_echeance %} 
+                                            <i class="far fa-clock ms-2 me-1"></i> {{ tache.date_echeance | replace('T', ' à ') }} 
+                                        {% endif %}
                                     </div>
                                 </div>
                             </div>
@@ -153,6 +170,18 @@
                 </div>
             </div>
 
+            <div id="tab-calendar" class="tab-section d-none animate-stagger">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="fw-bolder m-0">Planning Interactif</h5>
+                    <button class="btn btn-primary rounded-pill px-4 fw-bold" data-bs-toggle="modal" data-bs-target="#modalAddDirect">
+                        <i class="fas fa-plus me-2"></i>Nouvelle tâche rapide
+                    </button>
+                </div>
+                <div class="app-card shadow-sm p-4">
+                    <div id="calendar"></div>
+                </div>
+            </div>
+
             <div id="tab-projets" class="tab-section d-none animate-stagger">
                 <div class="app-card mb-5" style="background: linear-gradient(135deg, rgba(79, 70, 229, 0.05) 0%, rgba(79, 70, 229, 0) 100%);">
                     <form action="/ajouter_projet" method="POST">
@@ -160,6 +189,7 @@
                         <div class="input-group input-group-lg shadow-sm rounded-pill overflow-hidden border border-primary border-opacity-25">
                             <span class="input-group-text bg-transparent border-0 ps-4"><i class="fas fa-briefcase text-primary"></i></span>
                             <input type="text" name="nom_projet" class="form-control border-0 bg-transparent" placeholder="Nom du projet..." required>
+                            <input type="date" name="date_limite" class="form-control border-0 bg-transparent text-muted" style="max-width: 170px;" title="Date limite">
                             <button type="submit" class="btn btn-primary px-5 fw-bold rounded-pill m-1">CRÉER</button>
                         </div>
                     </form>
@@ -168,18 +198,36 @@
                 <div class="row g-4">
                     {% for p in projets %}
                         <div class="col-12 search-item">
-                            <div class="app-card p-0 overflow-hidden">
-                                <div class="p-4 project-header d-flex justify-content-between align-items-center" data-bs-toggle="collapse" data-bs-target="#collapseProjet{{ p.infos.id }}" aria-expanded="false">
-                                    <div class="flex-grow-1 me-4">
+                            <div class="app-card p-0">
+                                
+                                <div class="p-4 project-header d-flex justify-content-between align-items-center">
+                                    <div class="flex-grow-1 me-4" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#collapseProjet{{ p.infos.id }}" aria-expanded="false">
                                         <div class="d-flex justify-content-between align-items-center mb-2">
-                                            <h5 class="fw-bolder m-0">{{ p.infos.nom }}</h5>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <h5 class="fw-bolder m-0">{{ p.infos.nom }}</h5>
+                                                {% if p.infos.date_limite %}
+                                                    <span class="badge bg-warning text-dark bg-opacity-25 border border-warning px-2"><i class="far fa-calendar-alt me-1"></i> {{ p.infos.date_limite }}</span>
+                                                {% endif %}
+                                            </div>
                                             <span class="badge bg-light text-dark border rounded-pill px-3 py-2 shadow-sm">{{ p.pourcentage }}% accompli</span>
                                         </div>
                                         <div class="progress rounded-pill bg-secondary bg-opacity-10" style="height: 8px;">
                                             <div class="progress-bar bg-primary rounded-pill" style="width: {{ p.pourcentage }}%"></div>
                                         </div>
                                     </div>
-                                    <div class="bg-light rounded-circle p-2 px-3 text-muted border shadow-sm"><i class="fas fa-chevron-down chevron-icon"></i></div>
+                                    
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="dropdown">
+                                            <button class="btn btn-light rounded-circle p-2 text-muted border shadow-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="fas fa-ellipsis-v px-2"></i></button>
+                                            <ul class="dropdown-menu dropdown-menu-end border-0 shadow rounded-3">
+                                                <li><button class="dropdown-item py-2" type="button" data-bs-toggle="modal" data-bs-target="#modalModifProjet{{ p.infos.id }}"><i class="fas fa-pen text-muted me-2"></i> Modifier</button></li>
+                                                <li><a class="dropdown-item py-2" href="/archiver_projet/{{ p.infos.id }}"><i class="fas fa-archive text-warning me-2"></i> Archiver</a></li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li><a class="dropdown-item text-danger py-2" href="/supprimer_projet/{{ p.infos.id }}" onclick="return confirm('Attention, cela effacera aussi toutes les tâches du projet. Continuer ?');"><i class="fas fa-trash-alt me-2"></i> Supprimer</a></li>
+                                            </ul>
+                                        </div>
+                                        <div class="bg-light rounded-circle p-2 px-3 text-muted border shadow-sm" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#collapseProjet{{ p.infos.id }}"><i class="fas fa-chevron-down chevron-icon"></i></div>
+                                    </div>
                                 </div>
 
                                 <div class="collapse" id="collapseProjet{{ p.infos.id }}">
@@ -207,6 +255,7 @@
                                                         </div>
                                                         <div class="d-flex align-items-center gap-3">
                                                             <span class="badge bg-{{ t.urgence }} bg-opacity-10 text-{{ t.urgence }} rounded-pill">{{ t.statut }}</span>
+                                                            <button class="btn btn-sm text-primary opacity-75 p-0 me-2" data-bs-toggle="modal" data-bs-target="#modalModif{{ t.id }}"><i class="fas fa-pen"></i></button>
                                                             <a href="/supprimer/{{ t.id }}" class="text-danger opacity-75"><i class="fas fa-trash"></i></a>
                                                         </div>
                                                     </li>
@@ -222,6 +271,30 @@
                         </div>
                     {% endfor %}
                 </div>
+
+                {% if projets_archives %}
+                <div class="mt-5 pt-4 border-top">
+                    <h5 class="fw-bolder mb-4 text-muted"><i class="fas fa-archive me-2"></i> Projets Archivés</h5>
+                    <div class="row g-4 opacity-75">
+                        {% for p in projets_archives %}
+                            <div class="col-12 search-item">
+                                <div class="app-card p-0 overflow-hidden bg-body">
+                                    <div class="p-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
+                                        <div class="flex-grow-1">
+                                            <h6 class="fw-bold m-0 text-muted">{{ p.infos.nom }}</h6>
+                                            <small class="text-muted">{{ p.pourcentage }}% accompli {% if p.infos.date_limite %} | Échéance : {{ p.infos.date_limite }}{% endif %}</small>
+                                        </div>
+                                        <div class="d-flex gap-2">
+                                            <a href="/desarchiver_projet/{{ p.infos.id }}" class="btn btn-sm btn-outline-primary rounded-pill px-3"><i class="fas fa-box-open me-1"></i> Désarchiver</a>
+                                            <a href="/supprimer_projet/{{ p.infos.id }}" class="btn btn-sm btn-outline-danger rounded-pill px-3" onclick="return confirm('Supprimer définitivement ce projet ?');"><i class="fas fa-trash"></i></a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
             </div>
 
             <div id="tab-stats" class="tab-section d-none animate-slide-up">
@@ -304,26 +377,83 @@
         </main>
     </div>
 
-    {% for tache in a_faire %}
+    <div class="modal fade" id="modalAddDirect" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="modal-header border-0 bg-primary text-white">
+                    <h5 class="modal-title fw-bold"><i class="fas fa-calendar-plus me-2"></i>Ajouter pour cette date</h5>
+                    <button class="btn-close btn-close-white" data-bs-dismiss="modal" type="button"></button>
+                </div>
+                <form action="/ajouter" method="POST">
+                    <div class="modal-body p-4">
+                        <label class="small text-muted fw-bold mb-1">Titre de la tâche</label>
+                        <input type="text" name="titre" class="form-control mb-4" placeholder="Que devez-vous accomplir ?" required>
+                        <label class="small text-muted fw-bold mb-1">Date et Heure</label>
+                        <input type="datetime-local" name="date" id="calendar_date_input" class="form-control mb-4" required>
+                        <label class="small text-muted fw-bold mb-1">Urgence</label>
+                        <select name="urgence" class="form-select">
+                            <option value="primary">Normal</option>
+                            <option value="warning">Important</option>
+                            <option value="danger">Urgent</option>
+                        </select>
+                    </div>
+                    <div class="modal-footer border-0 bg-light p-3"><button class="btn btn-primary w-100">Planifier</button></div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {% set toutes_les_taches = [] %}
+    {% for t in a_faire %}{% set _ = toutes_les_taches.append(t) %}{% endfor %}
+    {% for p in projets %}
+        {% for t in p.taches %}{% set _ = toutes_les_taches.append(t) %}{% endfor %}
+    {% endfor %}
+
+    {% for tache in toutes_les_taches %}
     <div class="modal fade" id="modalModif{{ tache.id }}" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
                 <div class="modal-header border-0 bg-light">
                     <h5 class="modal-title fw-bold"><i class="fas fa-pen text-primary me-2"></i>Modifier la tâche</h5>
-                    <button class="btn-close" data-bs-dismiss="modal"></button>
+                    <button class="btn-close" data-bs-dismiss="modal" type="button"></button>
                 </div>
                 <form action="/modifier/{{ tache.id }}" method="POST">
                     <div class="modal-body p-4">
                         <label class="small text-muted fw-bold mb-1">Titre</label>
                         <input type="text" name="titre" class="form-control mb-4" value="{{ tache.titre }}">
-                        <label class="small text-muted fw-bold mb-1">Date</label>
-                        <input type="date" name="date" class="form-control mb-4" value="{{ tache.date_echeance }}">
+                        <label class="small text-muted fw-bold mb-1">Date et Heure</label>
+                        <input type="datetime-local" name="date" class="form-control mb-4" value="{{ tache.date_echeance }}">
                         <label class="small text-muted fw-bold mb-1">Urgence</label>
                         <select name="urgence" class="form-select">
                             <option value="primary" {% if tache.urgence == 'primary' %}selected{% endif %}>Normal</option>
                             <option value="warning" {% if tache.urgence == 'warning' %}selected{% endif %}>Important</option>
                             <option value="danger" {% if tache.urgence == 'danger' %}selected{% endif %}>Urgent</option>
                         </select>
+                    </div>
+                    <div class="modal-footer border-0 bg-light p-3">
+                        <a href="/supprimer/{{ tache.id }}" class="btn btn-outline-danger px-4" title="Supprimer"><i class="fas fa-trash"></i></a>
+                        <button class="btn btn-primary flex-grow-1">Enregistrer</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+
+    {% for p in projets %}
+    <div class="modal fade" id="modalModifProjet{{ p.infos.id }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="modal-header border-0 bg-light">
+                    <h5 class="modal-title fw-bold"><i class="fas fa-pen text-primary me-2"></i>Modifier le projet</h5>
+                    <button class="btn-close" data-bs-dismiss="modal" type="button"></button>
+                </div>
+                <form action="/modifier_projet/{{ p.infos.id }}" method="POST">
+                    <div class="modal-body p-4">
+                        <label class="small text-muted fw-bold mb-1">Nom du projet</label>
+                        <input type="text" name="nom_projet" class="form-control mb-4" value="{{ p.infos.nom }}" required>
+                        <label class="small text-muted fw-bold mb-1">Date d'échéance (Projet global)</label>
+                        <input type="date" name="date_limite" class="form-control mb-4" value="{{ p.infos.date_limite }}">
                     </div>
                     <div class="modal-footer border-0 bg-light p-3"><button class="btn btn-primary w-100">Enregistrer</button></div>
                 </form>
@@ -338,13 +468,15 @@
             <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
                 <div class="modal-header border-0 bg-primary text-white">
                     <h5 class="modal-title fw-bold"><i class="fas fa-plus-circle me-2"></i>Ajouter au projet</h5>
-                    <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    <button class="btn-close btn-close-white" data-bs-dismiss="modal" type="button"></button>
                 </div>
                 <form action="/ajouter" method="POST">
                     <div class="modal-body p-4">
                         <input type="hidden" name="projet_id" value="{{ p.infos.id }}">
                         <label class="form-label text-muted small fw-bold">Titre de la tâche</label>
                         <input type="text" name="titre" class="form-control mb-4" placeholder="Ex: Rédiger le rapport..." required>
+                        <label class="form-label text-muted small fw-bold">Date et Heure</label>
+                        <input type="datetime-local" name="date" class="form-control mb-4">
                         <label class="form-label text-muted small fw-bold">Urgence</label>
                         <select name="urgence" class="form-select">
                             <option value="primary">Normal</option>
@@ -361,7 +493,71 @@
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js'></script>
     <script src="{{ url_for('static', filename='script.js') }}"></script>
+
+    <script>
+        var calendar;
+        document.addEventListener('DOMContentLoaded', function() {
+            var calendarEl = document.getElementById('calendar');
+            
+            calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'timeGridWeek', // VUE PAR DÉFAUT : SEMAINE AVEC HEURES
+                locale: 'fr',
+                slotMinTime: '07:00:00', // Commence à 7h
+                slotMaxTime: '22:00:00', // Termine à 22h
+                nowIndicator: true,      // Ajoute la ligne rouge de l'heure actuelle
+                navLinks: true,          // Permet de cliquer sur un nom de jour pour zoomer
+                buttonText: {
+                    today: "Aujourd'hui",
+                    month: 'Mois',
+                    week: 'Semaine',
+                    day: 'Jour'
+                },
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                },
+                events: '/api/tasks', 
+                dateClick: function(info) {
+                    let dateVal = info.dateStr;
+                    // Si on clique sur un mois (pas d'heure)
+                    if (dateVal.length === 10) {
+                        dateVal += "T12:00"; 
+                    } else {
+                        // On extrait l'heure pour l'input datetime-local (YYYY-MM-DDTHH:MM)
+                        dateVal = dateVal.substring(0, 16); 
+                    }
+                    
+                    document.getElementById('calendar_date_input').value = dateVal;
+                    var myModal = new bootstrap.Modal(document.getElementById('modalAddDirect'));
+                    myModal.show();
+                },
+                eventClick: function(info) {
+                    var modalId = 'modalModif' + info.event.id;
+                    var modalEl = document.getElementById(modalId);
+                    if(modalEl) {
+                        var myModal = new bootstrap.Modal(modalEl);
+                        myModal.show();
+                    }
+                }
+            });
+
+            // Patch pour bien rendre le calendrier quand on change d'onglet
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    if (this.getAttribute('onclick') && this.getAttribute('onclick').includes('calendar')) {
+                        setTimeout(() => { calendar.render(); }, 150);
+                    }
+                });
+            });
+
+            if (localStorage.getItem('activeTab') === 'calendar') {
+                setTimeout(() => { calendar.render(); }, 200);
+            }
+        });
+    </script>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
