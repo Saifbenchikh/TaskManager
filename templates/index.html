@@ -26,7 +26,11 @@
                 <div class="mt-auto pt-3 border-top pb-2">
                     <div class="dropdown mb-3">
                         <a href="#" class="nav-link text-muted d-flex align-items-center dropdown-toggle w-100 p-2" data-bs-toggle="dropdown" aria-expanded="false" style="cursor: pointer;">
-                            <i class="fas fa-user-circle text-primary fs-4 me-2"></i>
+                            {% if user and user.avatar %}
+                                <img src="{{ url_for('static', filename='uploads/avatars/' + user.avatar) }}" class="rounded-circle me-2 object-fit-cover" style="width:32px;height:32px;" alt="Avatar">
+                            {% else %}
+                                <i class="fas fa-user-circle text-primary fs-4 me-2"></i>
+                            {% endif %}
                             <span class="fw-bold flex-grow-1 text-truncate">{{ username }}</span>
                         </a>
                         <ul class="dropdown-menu shadow-lg border-0 rounded-4 w-100 mb-2">

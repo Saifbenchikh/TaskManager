@@ -128,11 +128,14 @@ def profile():
             if 'avatar' in request.files:
                 file = request.files['avatar']
                 if file and file.filename != '' and allowed_file(file.filename):
-                    filename = secure_filename(f"user_{user_id}_{file.filename}")
+                    ext = file.filename.rsplit('.', 1)[1].lower()
+                    filename = secure_filename(f"user_{user_id}.{ext}")
                     file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
                     conn.execute('UPDATE users SET avatar = ? WHERE id = ?', (filename, user_id))
                     conn.commit()
                     flash('Photo de profil mise à jour !', 'success')
+                else:
+                    flash('Format non supporté. Utilisez PNG, JPG ou GIF.', 'danger')
         
         conn.close()
         return redirect(url_for('profile'))
@@ -147,6 +150,9 @@ def profile():
 def accueil():
     conn = get_db_connection()
     user_id = session['user_id']
+
+    # Récupération de l'utilisateur pour afficher son avatar dans la sidebar
+    user = conn.execute('SELECT * FROM users WHERE id = ?', (user_id,)).fetchone()
     
     filtre = request.args.get('trie', 'defaut')
     sql_query = 'SELECT * FROM tasks WHERE user_id = ?'
@@ -215,7 +221,8 @@ def accueil():
                            radar_data=json.dumps(radar_data),
                            line_labels=json.dumps(line_labels),
                            line_data=json.dumps(line_data),
-                           username=session.get('username'))
+                           username=session.get('username'),
+                           user=user)
 
 @app.route('/ajouter', methods=['POST'])
 @login_required
