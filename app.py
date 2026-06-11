@@ -231,7 +231,6 @@ def accueil():
     dates_taches = {}
     for t in taches:
         if t['date_echeance'] and t['statut'] == 'A faire':
-            # On coupe l'heure pour ne garder que la date (YYYY-MM-DD) pour le graphique
             date_str = t['date_echeance'][:10] 
             dates_taches[date_str] = dates_taches.get(date_str, 0) + 1
     
@@ -247,14 +246,24 @@ def accueil():
                            line_labels=json.dumps(line_labels), line_data=json.dumps(line_data),
                            username=session.get('username'), user=user)
 
-# --- ROUTES D'ACTIONS (Ajout, Modif, Suppr) ---
+# --- ROUTES D'ACTIONS ---
 @app.route('/ajouter', methods=['POST'])
 @login_required
 def ajouter_tache():
     titre = request.form.get('titre')
-    date_echeance = request.form.get('date') # Ce sera maintenant au format 'YYYY-MM-DDTHH:MM'
+    date_part = request.form.get('date')
+    heure_part = request.form.get('heure') # Nouveau champ Heure
     urgence = request.form.get('urgence')
     projet_id = request.form.get('projet_id') or None
+    
+    # NOUVEAU LOGIC : Combinaison de Date et Heure
+    date_echeance = None
+    if date_part:
+        if heure_part:
+            date_echeance = f"{date_part}T{heure_part}"
+        else:
+            date_echeance = date_part # Pas d'heure = All Day
+
     conn = get_db_connection()
     conn.execute('INSERT INTO tasks (titre, statut, urgence, date_echeance, project_id, user_id) VALUES (?, ?, ?, ?, ?, ?)',
                  (titre, 'A faire', urgence, date_echeance, projet_id, session['user_id']))
@@ -266,8 +275,18 @@ def ajouter_tache():
 @login_required
 def modifier_tache(id):
     titre = request.form.get('titre')
-    date_echeance = request.form.get('date')
+    date_part = request.form.get('date')
+    heure_part = request.form.get('heure')
     urgence = request.form.get('urgence')
+    
+    # NOUVEAU LOGIC : Combinaison de Date et Heure
+    date_echeance = None
+    if date_part:
+        if heure_part:
+            date_echeance = f"{date_part}T{heure_part}"
+        else:
+            date_echeance = date_part
+
     conn = get_db_connection()
     conn.execute('UPDATE tasks SET titre = ?, date_echeance = ?, urgence = ? WHERE id = ? AND user_id = ?',
                  (titre, date_echeance, urgence, id, session['user_id']))

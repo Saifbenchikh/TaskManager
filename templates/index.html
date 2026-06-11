@@ -100,13 +100,17 @@
             <div id="tab-afaire" class="tab-section animate-stagger">
                 <div class="app-card mb-4" style="border-left: 6px solid var(--primary);">
                     <form action="/ajouter" method="POST" class="row g-3 align-items-end">
-                        <div class="col-md-5">
+                        <div class="col-md-4">
                             <label class="small text-muted fw-bold mb-2">Nouvelle tâche</label>
                             <input type="text" name="titre" class="form-control" placeholder="Que devez-vous accomplir ?" required>
                         </div>
-                        <div class="col-md-3">
-                            <label class="small text-muted fw-bold mb-2">Échéance & Heure</label>
-                            <input type="datetime-local" name="date" class="form-control">
+                        <div class="col-md-2">
+                            <label class="small text-muted fw-bold mb-2">Date (Optionnel)</label>
+                            <input type="date" name="date" class="form-control">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="small text-muted fw-bold mb-2">Heure (Optionnel)</label>
+                            <input type="time" name="heure" class="form-control">
                         </div>
                         <div class="col-md-2">
                             <label class="small text-muted fw-bold mb-2">Priorité</label>
@@ -381,15 +385,25 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
                 <div class="modal-header border-0 bg-primary text-white">
-                    <h5 class="modal-title fw-bold"><i class="fas fa-calendar-plus me-2"></i>Ajouter pour cette date</h5>
+                    <h5 class="modal-title fw-bold"><i class="fas fa-calendar-plus me-2"></i>Planifier un événement</h5>
                     <button class="btn-close btn-close-white" data-bs-dismiss="modal" type="button"></button>
                 </div>
                 <form action="/ajouter" method="POST">
                     <div class="modal-body p-4">
                         <label class="small text-muted fw-bold mb-1">Titre de la tâche</label>
                         <input type="text" name="titre" class="form-control mb-4" placeholder="Que devez-vous accomplir ?" required>
-                        <label class="small text-muted fw-bold mb-1">Date et Heure</label>
-                        <input type="datetime-local" name="date" id="calendar_date_input" class="form-control mb-4" required>
+                        
+                        <div class="row mb-4">
+                            <div class="col-6">
+                                <label class="small text-muted fw-bold mb-1">Date</label>
+                                <input type="date" name="date" id="calendar_date_input" class="form-control" required>
+                            </div>
+                            <div class="col-6">
+                                <label class="small text-muted fw-bold mb-1">Heure <span class="fw-normal">(Optionnelle)</span></label>
+                                <input type="time" name="heure" id="calendar_time_input" class="form-control" title="Laissez vide pour un événement sur toute la journée">
+                            </div>
+                        </div>
+
                         <label class="small text-muted fw-bold mb-1">Urgence</label>
                         <select name="urgence" class="form-select">
                             <option value="primary">Normal</option>
@@ -421,8 +435,18 @@
                     <div class="modal-body p-4">
                         <label class="small text-muted fw-bold mb-1">Titre</label>
                         <input type="text" name="titre" class="form-control mb-4" value="{{ tache.titre }}">
-                        <label class="small text-muted fw-bold mb-1">Date et Heure</label>
-                        <input type="datetime-local" name="date" class="form-control mb-4" value="{{ tache.date_echeance }}">
+                        
+                        <div class="row mb-4">
+                            <div class="col-6">
+                                <label class="small text-muted fw-bold mb-1">Date</label>
+                                <input type="date" name="date" class="form-control" value="{{ tache.date_echeance[:10] if tache.date_echeance else '' }}">
+                            </div>
+                            <div class="col-6">
+                                <label class="small text-muted fw-bold mb-1">Heure <span class="fw-normal">(Optionnelle)</span></label>
+                                <input type="time" name="heure" class="form-control" value="{{ tache.date_echeance[11:16] if tache.date_echeance and 'T' in tache.date_echeance else '' }}">
+                            </div>
+                        </div>
+
                         <label class="small text-muted fw-bold mb-1">Urgence</label>
                         <select name="urgence" class="form-select">
                             <option value="primary" {% if tache.urgence == 'primary' %}selected{% endif %}>Normal</option>
@@ -475,8 +499,18 @@
                         <input type="hidden" name="projet_id" value="{{ p.infos.id }}">
                         <label class="form-label text-muted small fw-bold">Titre de la tâche</label>
                         <input type="text" name="titre" class="form-control mb-4" placeholder="Ex: Rédiger le rapport..." required>
-                        <label class="form-label text-muted small fw-bold">Date et Heure</label>
-                        <input type="datetime-local" name="date" class="form-control mb-4">
+                        
+                        <div class="row mb-4">
+                            <div class="col-6">
+                                <label class="small text-muted fw-bold mb-1">Date</label>
+                                <input type="date" name="date" class="form-control">
+                            </div>
+                            <div class="col-6">
+                                <label class="small text-muted fw-bold mb-1">Heure <span class="fw-normal">(Optionnelle)</span></label>
+                                <input type="time" name="heure" class="form-control">
+                            </div>
+                        </div>
+
                         <label class="form-label text-muted small fw-bold">Urgence</label>
                         <select name="urgence" class="form-select">
                             <option value="primary">Normal</option>
@@ -502,12 +536,12 @@
             var calendarEl = document.getElementById('calendar');
             
             calendar = new FullCalendar.Calendar(calendarEl, {
-                initialView: 'timeGridWeek', // VUE PAR DÉFAUT : SEMAINE AVEC HEURES
+                initialView: 'timeGridWeek', 
                 locale: 'fr',
-                slotMinTime: '07:00:00', // Commence à 7h
-                slotMaxTime: '22:00:00', // Termine à 22h
-                nowIndicator: true,      // Ajoute la ligne rouge de l'heure actuelle
-                navLinks: true,          // Permet de cliquer sur un nom de jour pour zoomer
+                slotMinTime: '07:00:00',
+                slotMaxTime: '22:00:00', 
+                nowIndicator: true,      
+                navLinks: true,          
                 buttonText: {
                     today: "Aujourd'hui",
                     month: 'Mois',
@@ -522,15 +556,17 @@
                 events: '/api/tasks', 
                 dateClick: function(info) {
                     let dateVal = info.dateStr;
-                    // Si on clique sur un mois (pas d'heure)
-                    if (dateVal.length === 10) {
-                        dateVal += "T12:00"; 
-                    } else {
-                        // On extrait l'heure pour l'input datetime-local (YYYY-MM-DDTHH:MM)
-                        dateVal = dateVal.substring(0, 16); 
+                    let timeVal = "";
+                    
+                    // Si on a cliqué sur une case avec une heure (ex: 2023-11-20T14:30:00+01:00)
+                    if (dateVal.includes("T")) {
+                        timeVal = dateVal.substring(11, 16);
+                        dateVal = dateVal.substring(0, 10);
                     }
                     
                     document.getElementById('calendar_date_input').value = dateVal;
+                    document.getElementById('calendar_time_input').value = timeVal; // S'il n'y a pas de T, ça reste vide = All Day
+
                     var myModal = new bootstrap.Modal(document.getElementById('modalAddDirect'));
                     myModal.show();
                 },
