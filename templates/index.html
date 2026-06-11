@@ -23,9 +23,18 @@
                 <a class="nav-link" href="#" onclick="showTab(event, 'projets')"><i class="fas fa-folder-open"></i> Projets</a>
                 <a class="nav-link" href="#" onclick="showTab(event, 'stats')"><i class="fas fa-chart-pie"></i> Statistiques</a>
                 <a class="nav-link" href="#" onclick="showTab(event, 'terminees')"><i class="fas fa-history"></i> Historique</a>
+                
                 <div class="mt-4 pt-3 border-top">
+                    <div class="nav-link text-muted mb-2 px-3 py-1 fw-bold" style="cursor: default;">
+                        <i class="fas fa-user text-primary"></i> Bonjour, {{ username }}
+                    </div>
+
                     <a class="nav-link text-muted" href="#" onclick="toggleDarkMode(event)">
                         <i class="fas fa-moon" id="dark-icon"></i> <span id="dark-text">Mode Sombre</span>
+                    </a>
+                    
+                    <a class="nav-link text-danger mt-2" href="/logout">
+                        <i class="fas fa-sign-out-alt"></i> Déconnexion
                     </a>
                 </div>
             </div>
